@@ -4,7 +4,7 @@ import flask
 from flask import render_template, flash, redirect
 from .forms import SearchForm, AddComputerForm
 import re
-from .models import User, Computer
+from .models import Computer
 import datetime
 import time
 

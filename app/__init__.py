@@ -1,6 +1,5 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.login import LoginManager
 import os
 from config import basedir
 import datetime
