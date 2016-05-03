@@ -1,0 +1,40 @@
+{% extends "main.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="col-md-12">
+        <div class="row">
+            <h3> {{computername}} </h3>
+        </div>
+        <div class="row">
+            <table class="table table-bordered table-striped">
+            <thead>
+            <tr>
+            <th>User Name</th>
+            <th>Session Name</th>
+            <th>ID</th>
+            <th>STATE</th>
+            <th>IDLE TIME</th>
+            <th>LOGON TIME</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+            <tr>
+            <td>{{user.name}}</td>
+            <td>{{user.session}}</td>
+            <td>{{user.id}}</td>
+            <td>{{user.state}}</td>
+            <td>{{user.idle}}</td>
+            <td>{{user.logon}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+          	{% if error %}
+        	    <div class="alert alert-danger" role="alert"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {{error}}
+        	    </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

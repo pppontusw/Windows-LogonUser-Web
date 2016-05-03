@@ -1,0 +1,42 @@
+{% extends "main.html" %}
+{% block content %}
+<div class="container-fluid">
+<div class="col-md-12">
+  <div class="row">
+  	{% if error %}
+	    <div class="alert alert-danger" role="alert"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {{error}}
+	    </div>
+    {% endif %}
+    </div>
+  <div id="users" class="row">
+<div class="input-group col-md-4">
+      <span class="input-group-addon" id="basic-addon1">Search</span>
+      <input type="text" class="search form-control" placeholder="Search for computer or user.." aria-describedby="basic-addon1">
+    </div>
+        <a href="/refreshall" class="showrefresh pull-right"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> Refresh</a>
+    <br><br>
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+        <th> Computer Name <a class="glyphicon glyphicon-sort sort pull-right" data-sort="computername"></a></th>
+        <th><a class="glyphicon glyphicon-sort sort pull-right" data-sort="activeusers"></a> Active Users</th>
+        <th><a class="glyphicon glyphicon-sort sort pull-right" data-sort="inactiveusers"></a> Inactive Users</th>
+        <th> Last Updated</th>
+        </tr>
+      </thead>
+      <tbody class="list">
+        {% for computer in allcomputers %}
+        <tr>
+        <td class="computername"><a href="/{{computer.computername}}">{{computer.computername}}</a></td>
+        <td class="activeusers">{{computer.activeusers}}</td>
+        <td class="inactiveusers">{{computer.inactiveusers}}</td>
+        <td>{{computer.timestamp|datetimecomp}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+{% endblock %}
