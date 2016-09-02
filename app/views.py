@@ -104,7 +104,13 @@ def addComputer():
 		if computer is None:
 			userinfo = getComputerInfo(addcomputerform.data['addcomputer'])
 			if (type(userinfo) == str):
-				return render_template('admin.html', searchform=searchform, addcomputerform=addcomputerform, error='We could not contact ' + addcomputerform.data['addcomputer'] + ', please check that the computer name is correct.', allcomputers=allcomputers, addcomps=True)
+                                if (userinfo == 'No users logged in'):
+                                        computer = Computer(computername=addcomputerform.data['addcomputer'], activeusers=userinfo, inactiveusers='', timestamp=datetime.datetime.utcnow())
+                                        db.session.add(computer)
+                                        db.session.commit()
+                                        allcomputers = Computer.query.order_by('computername asc').all()
+                                        return render_template('admin.html', searchform=searchform, addcomputerform=addcomputerform, allcomputers=allcomputers, addcomps=True)
+                                return render_template('admin.html', searchform=searchform, addcomputerform=addcomputerform, error='We could not contact ' + addcomputerform.data['addcomputer'] + ', please check that the computer name is correct.', allcomputers=allcomputers, addcomps=True)
 			activeusernames = ""
 			inactiveusernames = ""
 			for user in userinfo:
