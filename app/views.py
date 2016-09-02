@@ -15,25 +15,29 @@ def getComputerInfo(computername):
 	addcomputerform = AddComputerForm()
 	computerstring = '/server:' + computername
 	# call subprocess
-	sproc = subprocess.Popen(["quser", computerstring], stdout=subprocess.PIPE)
+	sproc = subprocess.Popen(["quser", computerstring], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	# read stdout
 	outp = sproc.stdout.readlines()
 	# initialize object to hold the utf8 list
 	outps = []
 	# wait for the subprocess call to finish
-	sproc.wait()
+	sproc.wait()	
 	for output in outp:
 		# make the list in utf8
 		outps.append(output.decode('utf-8'))
 	# construct the object that will hold all our users
 	userobj = []
+	outperr = sproc.stderr.readlines()
 	# if this fails we probably did not get a correct response from the server
 	try:
 		# removing the first line as we will print that in our HTML
 		del outps[0]
 	except IndexError:
-		return render_template('admin.html', addcomputerform=addcomputerform, searchform=searchform, error='We could not give you results for ' + computername + ', please check that this name is correct.', addcomps=True)
-	# go through our users to construct the object
+                if (outperr):
+                        if (re.search('No User exists for *', str(outperr[0]))):
+                                return 'No users logged in'
+                return render_template('admin.html', addcomputerform=addcomputerform, searchform=searchform, error='We could not give you results for ' + computername + ', please check that this name is correct.', addcomps=True)
+        # go through our users to construct the object
 	for user in outps:
 		userattr = user.split()
 		# for users where the session name is missing
@@ -71,7 +75,11 @@ def refreshAll():
 	for computer in allcomps:
 		userinfo = getComputerInfo(computer.computername)
 		if (type(userinfo) == str):
-			pass
+			if (userinfo == 'No users logged in'):
+				computer.activeusers=userinfo
+				computer.inactiveusers=''
+				computer.timestamp=datetime.datetime.utcnow()
+				db.session.commit()
 		else:
 			activeusernames = ""
 			inactiveusernames = ""
@@ -112,6 +120,9 @@ def addComputer():
 			return render_template('admin.html', searchform=searchform, addcomputerform=addcomputerform, error='Already exists.', allcomputers=allcomputers, addcomps=True)
 	return render_template('admin.html', searchform=searchform, addcomputerform=addcomputerform, allcomputers=allcomputers, addcomps=True)
 
+@app.route('/favicon.ico')
+def favicon():
+        return 'no icon'
 
 @app.route('/<computername>', methods=['GET'])
 def getComputer(computername):
@@ -119,23 +130,33 @@ def getComputer(computername):
 	computer = Computer.query.filter_by(computername=computername).first()
 	userobj = getComputerInfo(computername)
 	if (type(userobj) == str):
-		allcomputers = Computer.query.order_by('computername asc').all()
-		return render_template('index.html', searchform=searchform, error='We could not contact ' + computername + ', please check that the computer name is correct.', allcomputers=allcomputers, listcomps=True)
-	activeusernames = ""
-	inactiveusernames = ""
-	for user in userobj:
-		if (user['state'] == 'Active'):
-			activeusernames = activeusernames + ', ' + user['name']
+		if (userobj == 'No users logged in'):
+			computer.activeusers=userobj
+			computer.inactiveusers=''
+			computer.timestamp=datetime.datetime.utcnow()
+			db.session.commit()
+			nouser = { 'name': userobj, 'session': '', 'id': '', 'state': '', 'idle': '', 'logon': '' }
+			nousers = [nouser]
+			return render_template('users.html', users=[nouser], searchform=searchform, computername=computername)
 		else:
-			inactiveusernames = inactiveusernames + ', ' + user['name']
-	if computer is None:
-		newcomputer = Computer(computername=computername, activeusers=activeusernames[1:], inactiveusers=inactiveusernames[1:], timestamp=datetime.datetime.utcnow())
-		db.session.add(newcomputer)
+			allcomputers = Computer.query.order_by('computername asc').all()
+			return render_template('index.html', searchform=searchform, error='We could not contact ' + computername + ', please check that the computer name is correct.', allcomputers=allcomputers, listcomps=True)	
 	else:
-		computer.activeusers=activeusernames[1:]
-		computer.inactiveusers=inactiveusernames[1:]
-		computer.timestamp=datetime.datetime.utcnow()
-	db.session.commit()
+		activeusernames = ""
+		inactiveusernames = ""
+		for user in userobj:
+			if (user['state'] == 'Active'):
+				activeusernames = activeusernames + ', ' + user['name']
+			else:
+				inactiveusernames = inactiveusernames + ', ' + user['name']
+		if computer is None:
+			newcomputer = Computer(computername=computername, activeusers=activeusernames[1:], inactiveusers=inactiveusernames[1:], timestamp=datetime.datetime.utcnow())
+			db.session.add(newcomputer)
+		else:
+			computer.activeusers=activeusernames[1:]
+			computer.inactiveusers=inactiveusernames[1:]
+			computer.timestamp=datetime.datetime.utcnow()
+		db.session.commit()
 	return render_template('users.html', users=userobj, searchform=searchform, computername=computername)
 
 @app.route('/')
