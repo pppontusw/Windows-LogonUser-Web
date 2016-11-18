@@ -12,10 +12,16 @@ An account with sufficient access to make RemoteRPC calls to the computers, as w
 
 ## Setup
 
-```pip install flask flask-wtf flask-sqlalchemy sqlalchemy-migrate```
+```pip install -r requirements.txt```
 
+## Run
+```
+.\db_create.py
+.\run.py
+```
 
-```python .\db_create.py```
-
-
-```python .\run.py```
+## Test
+```
+.\db_create.py
+test.py -v tests.py
+```
